@@ -9,7 +9,7 @@ export default $config({
     };
   },
   async run() {
-    // await import('./infra/remix.ts');
+    await import('./infra/remix');
     await import('./infra/ses');
   }
 });

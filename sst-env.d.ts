@@ -5,6 +5,14 @@
 
 declare module "sst" {
   export interface Resource {
+    "RemixTestAfterMove3": {
+      "type": "sst.aws.Remix"
+      "url": string
+    }
+    "TestBucketAfterMove4": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
   }
 }
 /// <reference path="sst-env.d.ts" />
