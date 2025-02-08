@@ -1,0 +1,36 @@
+version: 0.2
+
+env:
+  variables:
+    stage: "dev"
+
+phases:
+  install:
+    commands:
+      - echo "Starting the build process..."
+
+  build:
+    commands:
+      - echo "Running in stage: $stage"
+      # 1. CloudFront Distribution ID を取得
+      - export DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Comment, 'RemixTestAfterMove3 app')].Id" --output text)
+      # 2. 取得した Distribution ID を確認
+      - echo "CloudFront Distribution ID: $DISTRIBUTION_ID"
+      # 3. 環境ごとの alias を設定
+      - |
+        if [ "$stage" = "dev" ]; then
+          export ALIAS="ishizawa-test.xyz"
+        elif [ "$stage" = "prod" ]; then
+          export ALIAS="www.example.com"
+        else
+          echo "Unknown stage: $stage"
+          exit 1
+        fi
+      # 4. 設定した alias を確認
+      - echo "Using alias: $ALIAS"
+      # 5. CloudFront Alias を関連付け
+      - aws cloudfront associate-alias --target-distribution-id $DISTRIBUTION_ID --alias $ALIAS
+
+  post_build:
+    commands:
+      - echo "Build process completed successfully!"
