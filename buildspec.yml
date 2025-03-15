@@ -16,7 +16,7 @@ phases:
       # - echo ${DOCKERHUB_PASS} | docker login -u ${DOCKERHUB_USER} --password-stdin
       - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -f ${DIRECTORY_NAME}/Dockerfile -t ${DOCKER_APP_NAME} ${DOCKER_APP_NAME}
+      - docker build -f ${DIRECTORY_NAME}/Dockerfile -t ${DOCKER_APP_NAME} ${DIRECTORY_NAME}
   build:
     commands:
       - echo Build completed on `date`
