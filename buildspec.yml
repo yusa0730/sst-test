@@ -26,6 +26,11 @@ phases:
   build:
     commands:
       - echo "Building the Docker image"
+      - |
+        if [ -z "$ECR_REPO_URI" ]; then
+          echo "ERROR: ECR_REPO_URI is empty!"
+          exit 1
+        fi
       - docker build -t "$ECR_REPO_URI:$IMAGE_TAG" -f hono-app/Dockerfile hono-app/
 
   post_build:
