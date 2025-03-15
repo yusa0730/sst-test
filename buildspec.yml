@@ -43,7 +43,6 @@ phases:
       - echo "Writing image URI to file"
       - echo "{\"imageUri\":\"$ECR_REPO_URI:$IMAGE_TAG\"}" > imageDetail.json
       - cat imageDetail.json
-
-artifacts:
-  files:
-    - imageDetail.json
+# artifacts:
+#   files:
+#     - imageDetail.json
