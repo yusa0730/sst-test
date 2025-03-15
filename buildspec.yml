@@ -17,6 +17,7 @@ phases:
   pre_build:
     commands:
       - echo "Retrieving ECR repository URI"
+      - echo "IMAGE_TAG value: $IMAGE_TAG" # 追加: IMAGE_TAG の値を確認
       - export ECR_REPO_URI=$(aws ecr describe-repositories --query "repositories[?repositoryName=='${INFRA_ID_PREFIX}-ecr-repository-${APP_STAGE}'].repositoryUri" --output text)
       - if [ -z "$ECR_REPO_URI" ]; then echo "ERROR: ECR repository not found!" && exit 1; fi
       - echo "ECR Repository URI: $ECR_REPO_URI"
@@ -26,6 +27,7 @@ phases:
   build:
     commands:
       - echo "Building the Docker image"
+      - echo "Using IMAGE_TAG: $IMAGE_TAG" # 追加: build フェーズでも IMAGE_TAG を確認
       - |
         if [ -z "$ECR_REPO_URI" ]; then
           echo "ERROR: ECR_REPO_URI is empty!"
