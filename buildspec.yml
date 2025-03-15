@@ -2,35 +2,37 @@ version: 0.2
 
 env:
   variables:
-    stage: "dev"
+    AWS_REGION: "ap-northeast-1" # AWSのリージョン
+    IMAGE_TAG: "latest"
 
 phases:
   install:
+    runtime-versions:
+      docker: 20
     commands:
-      - echo "Starting the build process..."
+      - echo "Installing dependencies"
+
+  pre_build:
+    commands:
+      - echo "Retrieving ECR repository URI"
+      - ECR_REPO_URI=$(aws ecr describe-repositories --query "repositories[?repositoryName=='${INFRA_ID_PREFIX}-ecr-repository-${APP_STAGE}'].repositoryUri" --output text)
+      - echo "Logging in to Amazon ECR"
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO_URI
 
   build:
     commands:
-      - echo "Running in stage: $stage"
-      # 1. CloudFront Distribution ID を取得
-      - export DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Comment, 'RemixTestAfterMove3 app')].Id" --output text)
-      # 2. 取得した Distribution ID を確認
-      - echo "CloudFront Distribution ID: $DISTRIBUTION_ID"
-      # 3. 環境ごとの alias を設定
-      - |
-        if [ "$stage" = "dev" ]; then
-          export ALIAS="ishizawa-test.xyz"
-        elif [ "$stage" = "prod" ]; then
-          export ALIAS="www.example.com"
-        else
-          echo "Unknown stage: $stage"
-          exit 1
-        fi
-      # 4. 設定した alias を確認
-      - echo "Using alias: $ALIAS"
-      # 5. CloudFront Alias を関連付け
-      - aws cloudfront associate-alias --target-distribution-id $DISTRIBUTION_ID --alias $ALIAS
+      - echo "Building the Docker image"
+      - docker build -t $ECR_REPO_URI:$IMAGE_TAG -f hono-app/Dockerfile hono-app/
 
   post_build:
     commands:
-      - echo "Build process completed successfully!"
+      - echo "Pushing the Docker image to Amazon ECR"
+      - docker push $ECR_REPO_URI:$IMAGE_TAG
+      - echo "Docker image pushed: $ECR_REPO_URI:$IMAGE_TAG"
+      - echo "Writing image URI to file"
+      - echo "{\"imageUri\":\"$ECR_REPO_URI:$IMAGE_TAG\"}" > imageDetail.json
+      - cat imageDetail.json
+
+artifacts:
+  files:
+    - imageDetail.json

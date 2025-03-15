@@ -4,12 +4,16 @@ import type { DistributionArgs } from "@pulumi/aws/cloudfront";
 export default $config({
   app(input) {
     return {
-      name: "aws-remix-after-move4",
+      name: "sst-test",
       home: "aws",
     };
   },
   async run() {
-    await import('./infra/remix');
-    await import('./infra/ses');
+    await import('./infra/infra-config');
+    await import('./infra/vpc');
+    await import('./infra/ecr');
+    await import('./infra/ecs');
+    // await import('./infra/remix');
+    // await import('./infra/ses');
   }
 });

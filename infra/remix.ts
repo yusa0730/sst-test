@@ -1,16 +1,13 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
-const idPrefix = "ishizawa-test4"
-const domainName = "ishizawa-test.xyz";
-const hostedZone = await aws.route53.getZone({
-  name: `${domainName}.`,
-});
+import { DistributionArgs } from "@pulumi/aws/cloudfront";
+import { infraConfigResouces } from "./infra-config";
 
 const bucket = new sst.aws.Bucket("TestBucketAfterMove4", {
   access: "public"
 });
 
-console.log("=======hostedZone=======", hostedZone.zoneId);
+console.log("=======hostedZone=======", infraConfigResouces.hostedZone.zoneId);
 
 const useast1 = new aws.Provider("Useast1TestAfterMove4", {
   region: "us-east-1",
@@ -19,7 +16,7 @@ const useast1 = new aws.Provider("Useast1TestAfterMove4", {
 // 移行元のCloudFrontで設定しているACMを取得する
 const acm = await aws.acm.getCertificate(
   {
-    domain: domainName,
+    domain: infraConfigResouces.domainName,
     statuses: ["ISSUED"],
   },
   { provider: useast1 },
@@ -27,7 +24,7 @@ const acm = await aws.acm.getCertificate(
 
 console.log("====acm====", acm.arn)
 
-const remix = new sst.aws.Remix("RemixTestAfterMove3", {
+const remix = new sst.aws.Remix(`${infraConfigResouces.idPrefix}-remix-${$app.stage}`, {
   link: [bucket],
   // domain: "ishizawa-test.xyz"
   transform: {
@@ -49,7 +46,7 @@ const remix = new sst.aws.Remix("RemixTestAfterMove3", {
             sslSupportMethod: "sni-only",
           };
 
-          args.aliases = [domainName]
+          args.aliases = [infraConfigResouces.domainName]
         },
       };
     }
@@ -67,8 +64,8 @@ remix.nodes.cdn?.apply((cdn) => {
 
     // Route 53 TXT record transfer domain
     new aws.route53.Record("transfer-txt-record", {
-      zoneId: hostedZone.zoneId,
-      name: `_.${domainName}`,
+      zoneId: infraConfigResouces.hostedZone.zoneId,
+      name: `_.${infraConfigResouces.domainName}`,
       type: aws.route53.RecordType.TXT,
       ttl: 1800,
       records: [$interpolate`${cleanUrl}`],
