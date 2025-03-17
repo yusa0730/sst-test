@@ -18,6 +18,14 @@ const albSecurityGroup = new aws.ec2.SecurityGroup(
         description: "From Internet to ALB",
       },
     ],
+    egress: [
+      {
+        fromPort: 0,
+        toPort: 0,
+        protocol: "-1",
+        cidrBlocks: ["0.0.0.0/0"],
+      }
+    ],
     tags: {
       Name: `${infraConfigResouces.idPrefix}-alb-sg-${$app.stage}`,
     }
@@ -39,6 +47,14 @@ const ecsSecurityGroup = new aws.ec2.SecurityGroup(
         securityGroups: [albSecurityGroup.id],
         description: "From ALB to Fargate",
       },
+    ],
+    egress: [
+      {
+        fromPort: 0,
+        toPort: 0,
+        protocol: "-1",
+        cidrBlocks: ["0.0.0.0/0"],
+      }
     ],
     tags: {
       Name: `${infraConfigResouces.idPrefix}-ecs-sg-${$app.stage}`,
