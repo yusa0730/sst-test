@@ -10,6 +10,30 @@ const repository = new aws.ecr.Repository(`${infraConfigResouces.idPrefix}-ecr-r
   }
 });
 
+new aws.ecr.LifecyclePolicy(
+  `${infraConfigResouces.idPrefix}-lifecycle-policy-${$app.stage}`,
+  {
+    repository: repository.name,
+    policy: $jsonStringify({
+      rules: [
+        {
+          rulePriority: 1,
+          description: "Keep 14 days",
+          selection: {
+            tagStatus: "untagged",
+            countType: "sinceImagePushed",
+            countUnit: "days",
+            countNumber: 14,
+          },
+          action: {
+            type: "expire",
+          },
+        },
+      ],
+    }),
+  }
+);
+
 export const ecrResources = {
   repository,
 };

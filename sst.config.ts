@@ -12,8 +12,12 @@ export default $config({
     await import('./infra/iam');
     await import('./infra/cloudwatch');
     await import('./infra/vpc');
+    await import('./infra/security-group');
+    await import('./infra/acm');
+    await import('./infra/s3');
+    await import('./infra/alb');
     await import('./infra/ecr');
-    // await import('./infra/ecs');
+    await import('./infra/ecs');
     // await import('./infra/remix');
     // await import('./infra/ses');
   }

@@ -42,6 +42,55 @@ const vpcFlowLogRole = new aws.iam.Role(
   },
 );
 
+// タスク実行ロール
+const taskExecutionRole = new aws.iam.Role(
+  `${infraConfigResouces.idPrefix}-task-execution-role-${$app.stage}`,
+  {
+    name: `${infraConfigResouces.idPrefix}-task-execution-role-${$app.stage}`,
+    assumeRolePolicy: $jsonStringify({
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Action: "sts:AssumeRole",
+          Effect: "Allow",
+          Principal: {
+            Service: "ecs-tasks.amazonaws.com",
+          },
+        },
+      ],
+    }),
+    managedPolicyArns: [
+      "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+    ],
+    // inlinePolicies: [
+    //   {
+    //     name: `${infraConfigResouces.idPrefix}-build-service-role-policy-${$app.stage}`,
+    //     policy: $jsonStringify({
+    //       Version: "2012-10-17",
+    //       Statement: [
+    //         {
+    //           Effect: "Allow",
+    //           Action: [
+    //             "secretsmanager:GetSecretValue",
+    //             "secretsmanager:PutResourcePolicy",
+    //             "secretsmanager:PutSecretValue",
+    //             "secretsmanager:DeleteSecret",
+    //             "secretsmanager:DescribeSecret",
+    //             "secretsmanager:TagResource",
+    //           ],
+    //           Resource: `arn:aws:secretsmanager:${infraConfigResouces.mainRegion}:${env.awsAccount}:secret:rds!cluster*`,
+    //         },
+    //       ],
+    //     }),
+    //   },
+    // ],
+    tags: {
+      Name: `${infraConfigResouces.idPrefix}-task-execution-role-${$app.stage}`,
+    },
+  },
+);
+
 export const iamResouces = {
-  vpcFlowLogRole
+  vpcFlowLogRole,
+  taskExecutionRole
 };
