@@ -8,6 +8,8 @@ WORKDIR /app
 # `pnpm` を有効化
 RUN corepack enable
 
+RUN echo "test"
+
 #Build
 COPY package*json tsconfig.json ./
 COPY ./src ./src

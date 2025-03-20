@@ -17,7 +17,8 @@ export default $config({
     await import('./infra/s3');
     await import('./infra/alb');
     await import('./infra/ecr');
-    await import('./infra/ecs');
+    // await import('./infra/ecs');
+    await import('./infra/ecs-sst');
     // await import('./infra/remix');
     // await import('./infra/ses');
   }
