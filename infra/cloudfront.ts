@@ -1,7 +1,6 @@
 import { albResources } from "./alb";
 import { infraConfigResouces } from "./infra-config";
 import { s3Resouces } from "./s3";
-import { vpcResources } from "./vpc";
 
 console.log("======cloudfront.ts start=======");
 
@@ -21,9 +20,9 @@ const vpcOriginForAlb = new aws.cloudfront.VpcOrigin(
         },
     },
     timeouts: {
-      create: "60s",
-      delete: "60s",
-      update: "60s",
+      create: "120s",
+      delete: "120s",
+      update: "120s",
     },
     tags: {
         Name: `${infraConfigResouces.idPrefix}-vpc-origin-${$app.stage}`,

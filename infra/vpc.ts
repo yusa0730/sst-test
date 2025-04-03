@@ -84,7 +84,7 @@ const publicSubnet1c = new aws.ec2.Subnet(
   `${infraConfigResouces.idPrefix}-public-subnet-1c-${$app.stage}`,
   {
     vpcId: vpc.id,
-    cidrBlock: `10.0.10.0/24`,
+    cidrBlock: `10.0.1.0/24`,
     availabilityZone: "ap-northeast-1c",
     tags: {
       Name: `${infraConfigResouces.idPrefix}-public-subnet-1c-${$app.stage}`
@@ -169,7 +169,7 @@ const privateSubnet1a = new aws.ec2.Subnet(
   `${infraConfigResouces.idPrefix}-private-subnet-1a-${$app.stage}`,
   {
     vpcId: vpc.id,
-    cidrBlock: `10.0.30.0/24`,
+    cidrBlock: `10.0.10.0/24`,
     availabilityZone: "ap-northeast-1a",
     tags: {
       Name: `${infraConfigResouces.idPrefix}-private-subnet-1a-${$app.stage}`
@@ -190,7 +190,7 @@ const privateSubnet1c = new aws.ec2.Subnet(
   `${infraConfigResouces.idPrefix}-private-subnet-1c-${$app.stage}`,
   {
     vpcId: vpc.id,
-    cidrBlock: `10.0.40.0/24`,
+    cidrBlock: `10.0.11.0/24`,
     availabilityZone: "ap-northeast-1c",
     tags: {
       Name: `${infraConfigResouces.idPrefix}-private-subnet-1c-${$app.stage}`
@@ -267,7 +267,7 @@ const protectedSubnet1a = new aws.ec2.Subnet(
   `${infraConfigResouces.idPrefix}-protected-subnet-1a-${$app.stage}`,
   {
     vpcId: vpc.id,
-    cidrBlock: `10.0.60.0/24`,
+    cidrBlock: `10.0.20.0/24`,
     availabilityZone: "ap-northeast-1a",
     tags: {
       Name: `${infraConfigResouces.idPrefix}-protected-subnet-1a-${$app.stage}`
@@ -288,7 +288,7 @@ const protectedSubnet1c = new aws.ec2.Subnet(
   `${infraConfigResouces.idPrefix}-protected-subnet-1c-${$app.stage}`,
   {
     vpcId: vpc.id,
-    cidrBlock: `10.0.70.0/24`,
+    cidrBlock: `10.0.21.0/24`,
     availabilityZone: "ap-northeast-1c",
     tags: {
       Name: `${infraConfigResouces.idPrefix}-protected-subnet-1c-${$app.stage}`
