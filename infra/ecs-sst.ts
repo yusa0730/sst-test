@@ -14,8 +14,8 @@ const cluster = new sst.aws.Cluster.v1(
 	{
 		vpc: {
 			id: vpcResources.vpc.id,
-			publicSubnets: vpcResources.publicSubnets.map((subnet) => subnet.id),
-			privateSubnets: vpcResources.privateSubnets.map((subnet) => subnet.id),
+			publicSubnets: vpcResources.privateSubnets.map((subnet) => subnet.id),
+			privateSubnets: vpcResources.protectedSubnets.map((subnet) => subnet.id),
 			securityGroups: [securityGroupResources.ecsSecurityGroup.id],
 		},
 		transform: {

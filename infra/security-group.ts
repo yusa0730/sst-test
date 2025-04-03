@@ -3,6 +3,10 @@ import { vpcResources } from "./vpc";
 
 console.log("======security-gourp.ts start======");
 
+const cloudfrontPrefixListId = await aws.ec2.getManagedPrefixList({
+  name: "com.amazonaws.global.cloudfront.origin-facing",
+}).then((prefixList) => prefixList.id);
+
 const albSecurityGroup = new aws.ec2.SecurityGroup(
   `${infraConfigResouces.idPrefix}-alb-sg-${$app.stage}`,
   {
@@ -10,12 +14,19 @@ const albSecurityGroup = new aws.ec2.SecurityGroup(
     vpcId: vpcResources.vpc.id,
     description: "alb security group",
     ingress: [
+      // {
+      //   fromPort: 443,
+      //   toPort: 443,
+      //   protocol: aws.ec2.ProtocolType.TCP,
+      //   prefixListIds: [cloudfrontPrefixListId],
+      //   description: "From cloudfront to ALB",
+      // },
       {
-        fromPort: 443,
-        toPort: 443,
+        fromPort: 80,
+        toPort: 80,
         protocol: aws.ec2.ProtocolType.TCP,
-        cidrBlocks: ["0.0.0.0/0"],
-        description: "From Internet to ALB",
+        prefixListIds: [cloudfrontPrefixListId],
+        description: "From cloudfront to ALB",
       },
     ],
     egress: [

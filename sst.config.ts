@@ -21,5 +21,9 @@ export default $config({
     await import('./infra/ecs-sst');
     // await import('./infra/remix');
     // await import('./infra/ses');
+
+    // =======署名付きURLのテスト======
+    await import('./infra/s3');
+    await import('./infra/cloudfront');
   }
 });

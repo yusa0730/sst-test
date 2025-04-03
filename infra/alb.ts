@@ -11,7 +11,7 @@ const alb = new aws.lb.LoadBalancer(
   {
     name: `${infraConfigResouces.idPrefix}-alb-${$app.stage}`,
     loadBalancerType: "application",
-    subnets: vpcResources.publicSubnets.map((subnet) => subnet.id),
+    subnets: vpcResources.privateSubnets.map((subnet) => subnet.id),
     securityGroups: [securityGroupResources.albSecurityGroup.id],
     accessLogs: {
       bucket: s3Resouces.albAccessLogBucket.id,
@@ -35,30 +35,6 @@ const httpListener = new aws.lb.Listener(
     protocol: "HTTP",
     defaultActions: [
       {
-        type: "redirect",
-        redirect: {
-          port: "443",
-          protocol: "HTTPS",
-          statusCode: "HTTP_301"
-        },
-      },
-    ],
-    tags: {
-      Name: `${infraConfigResouces.idPrefix}-http-listener-${$app.stage}`,
-    },
-  },
-);
-
-const httpsListener = new aws.lb.Listener(
-  `${infraConfigResouces.idPrefix}-https-listener-${$app.stage}`,
-  {
-    loadBalancerArn: alb.arn,
-    port: 443,
-    protocol: "HTTPS",
-    certificateArn: acmResouces.albCertificate.arn,
-    sslPolicy: "ELBSecurityPolicy-TLS13-1-2-2021-06",
-    defaultActions: [
-      {
         type: "fixed-response",
         fixedResponse: {
           contentType: "text/plain",
@@ -68,26 +44,75 @@ const httpsListener = new aws.lb.Listener(
       },
     ],
     tags: {
-      Name: `${infraConfigResouces.idPrefix}-https-listener-${$app.stage}`,
+      Name: `${infraConfigResouces.idPrefix}-http-listener-${$app.stage}`,
     },
   },
 );
 
-new aws.route53.Record(
-  `${infraConfigResouces.idPrefix}-alb-a-record-${$app.stage}`,
-  {
-    zoneId: infraConfigResouces.hostedZone.zoneId,
-    name: infraConfigResouces.domainName,
-    type: aws.route53.RecordType.A,
-    aliases: [
-      {
-        name: alb.dnsName,
-        zoneId: alb.zoneId,
-        evaluateTargetHealth: true
-      },
-    ],
-  }
-);
+//// =========CloudFrontを利用しない場合コメントアウト外す============
+// const httpListener = new aws.lb.Listener(
+//   `${infraConfigResouces.idPrefix}-http-listener-${$app.stage}`,
+//   {
+//     loadBalancerArn: alb.arn,
+//     port: 80,
+//     protocol: "HTTP",
+//     defaultActions: [
+//       {
+//         type: "redirect",
+//         redirect: {
+//           port: "443",
+//           protocol: "HTTPS",
+//           statusCode: "HTTP_301"
+//         },
+//       },
+//     ],
+//     tags: {
+//       Name: `${infraConfigResouces.idPrefix}-http-listener-${$app.stage}`,
+//     },
+//   },
+// );
+
+// const httpsListener = new aws.lb.Listener(
+//   `${infraConfigResouces.idPrefix}-https-listener-${$app.stage}`,
+//   {
+//     loadBalancerArn: alb.arn,
+//     port: 443,
+//     protocol: "HTTPS",
+//     certificateArn: acmResouces.albCertificate.arn,
+//     sslPolicy: "ELBSecurityPolicy-TLS13-1-2-2021-06",
+//     defaultActions: [
+//       {
+//         type: "fixed-response",
+//         fixedResponse: {
+//           contentType: "text/plain",
+//           statusCode: "404",
+//           messageBody: "404 Not Found",
+//         },
+//       },
+//     ],
+//     tags: {
+//       Name: `${infraConfigResouces.idPrefix}-https-listener-${$app.stage}`,
+//     },
+//   },
+// );
+
+//// cloudfrontを利用しない場合は以下のコメントアウトを外す
+// new aws.route53.Record(
+//   `${infraConfigResouces.idPrefix}-alb-a-record-${$app.stage}`,
+//   {
+//     zoneId: infraConfigResouces.hostedZone.zoneId,
+//     name: infraConfigResouces.domainName,
+//     type: aws.route53.RecordType.A,
+//     aliases: [
+//       {
+//         name: alb.dnsName,
+//         zoneId: alb.zoneId,
+//         evaluateTargetHealth: true
+//       },
+//     ],
+//   }
+// );
+//// =========CloudFrontを利用しない場合はコメントアウト外す============
 
 const targetGroup = new aws.lb.TargetGroup(
   `${infraConfigResouces.idPrefix}-tg-${$app.stage}`,
@@ -114,15 +139,37 @@ const targetGroup = new aws.lb.TargetGroup(
   }
 );
 
+// new aws.lb.ListenerRule(
+//   `${infraConfigResouces.idPrefix}-https-listener-rule-${$app.stage}`,
+//   {
+//     listenerArn: httpsListener.arn,
+//     priority: 1,
+//     conditions: [
+//       {
+//         hostHeader: {
+//           values: [infraConfigResouces.domainName],
+//         },
+//       },
+//     ],
+//     actions: [
+//       {
+//         type: "forward",
+//         targetGroupArn: targetGroup.arn
+//       },
+//     ],
+//   }
+// );
+
 new aws.lb.ListenerRule(
-  `${infraConfigResouces.idPrefix}-https-listener-rule-${$app.stage}`,
+  `${infraConfigResouces.idPrefix}-http-listener-rule-${$app.stage}`,
   {
-    listenerArn: httpsListener.arn,
+    listenerArn: httpListener.arn,
     priority: 1,
     conditions: [
       {
-        hostHeader: {
-          values: [infraConfigResouces.domainName],
+        httpHeader: {
+          httpHeaderName: "X-Custom-Header",
+          values: ["test"],
         },
       },
     ],
@@ -138,6 +185,6 @@ new aws.lb.ListenerRule(
 export const albResources = {
   alb,
   httpListener,
-  httpsListener,
+  // httpsListener,
   targetGroup
 };
