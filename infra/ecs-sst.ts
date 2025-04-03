@@ -86,7 +86,7 @@ ecrResources.repository.repositoryUrl.apply((url) => {
                 logDriver: "awslogs",
                 options: {
                   "awslogs-region": infraConfigResouces.mainRegion,
-                  "awslogs-group": `${cloudwatchResources.ecsLog.name}`,
+                  "awslogs-group": cloudwatchResources.ecsLog.id,
                   "awslogs-stream-prefix": "backend",
                 },
               },
