@@ -20,9 +20,9 @@ const vpcOriginForAlb = new aws.cloudfront.VpcOrigin(
         },
     },
     timeouts: {
-      create: "120s",
-      delete: "120s",
-      update: "120s",
+      create: "300s",
+      delete: "300s",
+      update: "300s",
     },
     tags: {
         Name: `${infraConfigResouces.idPrefix}-vpc-origin-${$app.stage}`,
@@ -130,7 +130,7 @@ const cdn = new sst.aws.StaticSite(
             },
             customHeaders: [{
                 name: "X-Custom-Header",
-                value: "test",
+                value: `${infraConfigResouces.idPrefix}-cloudfront`,
             }],
           }
         ];

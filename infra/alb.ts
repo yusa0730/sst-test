@@ -11,6 +11,7 @@ const alb = new aws.lb.LoadBalancer(
   {
     name: `${infraConfigResouces.idPrefix}-alb-${$app.stage}`,
     loadBalancerType: "application",
+    internal: true,
     subnets: vpcResources.privateSubnets.map((subnet) => subnet.id),
     securityGroups: [securityGroupResources.albSecurityGroup.id],
     accessLogs: {
@@ -169,7 +170,7 @@ new aws.lb.ListenerRule(
       {
         httpHeader: {
           httpHeaderName: "X-Custom-Header",
-          values: ["test"],
+          values: [`${infraConfigResouces.idPrefix}-cloudfront`],
         },
       },
     ],
