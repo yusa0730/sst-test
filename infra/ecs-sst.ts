@@ -32,6 +32,30 @@ const cluster = new sst.aws.Cluster.v1(
 	}
 );
 
+// 署名付きURLの確認をする際の
+// const cluster = new sst.aws.Cluster.v1(
+// 	`${infraConfigResouces.idPrefix}-cluster-${$app.stage}`,
+// 	{
+// 		vpc: {
+// 			id: vpcResources.vpc.id,
+// 			publicSubnets: vpcResources.publicSubnets.map((subnet) => subnet.id),
+// 			privateSubnets: vpcResources.privateSubnets.map((subnet) => subnet.id),
+// 			securityGroups: [securityGroupResources.ecsSecurityGroup.id],
+// 		},
+// 		transform: {
+// 			cluster: {
+// 				name: `${infraConfigResouces.idPrefix}-cluster-${$app.stage}`,
+// 				settings: [
+// 					{
+// 							name: "containerInsights",
+// 							value: "enhanced",
+// 					},
+// 				],
+// 			},
+// 		},
+// 	}
+// );
+
 ecrResources.repository.repositoryUrl.apply((url) => {
   // ECS Service
   cluster.addService(`${infraConfigResouces.idPrefix}-service-${$app.stage}`, {

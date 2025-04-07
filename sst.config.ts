@@ -24,6 +24,7 @@ export default $config({
 
     // =======署名付きURLのテスト======
     await import('./infra/s3');
+    await import('./infra/waf');
     await import('./infra/cloudfront');
   }
 });

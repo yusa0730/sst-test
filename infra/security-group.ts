@@ -14,20 +14,20 @@ const albSecurityGroup = new aws.ec2.SecurityGroup(
     vpcId: vpcResources.vpc.id,
     description: "alb security group",
     ingress: [
-      // {
-      //   fromPort: 443,
-      //   toPort: 443,
-      //   protocol: aws.ec2.ProtocolType.TCP,
-      //   prefixListIds: [cloudfrontPrefixListId],
-      //   description: "From cloudfront to ALB",
-      // },
       {
-        fromPort: 80,
-        toPort: 80,
+        fromPort: 443,
+        toPort: 443,
         protocol: aws.ec2.ProtocolType.TCP,
         prefixListIds: [cloudfrontPrefixListId],
         description: "From cloudfront to ALB",
       },
+      // {
+      //   fromPort: 80,
+      //   toPort: 80,
+      //   protocol: aws.ec2.ProtocolType.TCP,
+      //   prefixListIds: [cloudfrontPrefixListId],
+      //   description: "From cloudfront to ALB",
+      // },
     ],
     egress: [
       {

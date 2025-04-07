@@ -90,26 +90,31 @@ const uploadCdnBucket = new aws.s3.BucketV2(
   {
     bucket: `${infraConfigResouces.idPrefix}-upload-cdn-bucket-${$app.stage}`,
     forceDestroy: true,
-    // policy: $jsonStringify({
-    //   Version: "2012-10-17",
-    //   Statement: [
-    //     {
-    //       Effect: "Allow",
-    //       Principal: {
-    //         AWS: "arn:aws:iam::582318560864:root",
-    //       },
-    //       Action: "s3:PutObject",
-    //       Resource: [
-    //         `arn:aws:s3:::${infraConfigResouces.idPrefix}-alb-connection-log-bucket-${$app.stage}/*`
-    //       ],
-    //     }
-    //   ],
-    // }),
+  },
+);
+
+const cloudfrontLogBucket = new aws.s3.BucketV2(
+  `${infraConfigResouces.idPrefix}-cloudfront-log-bucket-${$app.stage}`,
+  {
+    bucket: `${infraConfigResouces.idPrefix}-cloudfront-log-bucket-${$app.stage}`,
+    forceDestroy: true,
+  },
+);
+
+// オブジェクトの所有権の設定
+new aws.s3.BucketOwnershipControls(
+  `${infraConfigResouces.idPrefix}-log-bucket-ownership-controls-${$app.stage}`,
+  {
+    bucket: cloudfrontLogBucket.id,
+    rule: {
+      objectOwnership: "BucketOwnerPreferred",
+    },
   },
 );
 
 export const s3Resouces = {
   albAccessLogBucket,
   albConnectionLogBucket,
-  uploadCdnBucket
+  uploadCdnBucket,
+  cloudfrontLogBucket
 };

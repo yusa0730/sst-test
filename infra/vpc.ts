@@ -207,6 +207,7 @@ new aws.ec2.RouteTableAssociation(
   }
 );
 
+// 署名付きURLに接続する際のテスト用
 // new aws.ec2.Route(
 //   `${infraConfigResouces.idPrefix}-private-default-route-1a-${$app.stage}`,
 //   {

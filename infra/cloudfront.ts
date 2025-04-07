@@ -1,6 +1,8 @@
 import { albResources } from "./alb";
 import { infraConfigResouces } from "./infra-config";
 import { s3Resouces } from "./s3";
+import { acmResouces } from "./acm";
+import { wafResources } from "./waf";
 
 console.log("======cloudfront.ts start=======");
 
@@ -12,8 +14,7 @@ const vpcOriginForAlb = new aws.cloudfront.VpcOrigin(
         httpPort: 80,
         httpsPort: 443,
         name: `${infraConfigResouces.idPrefix}-vpc-origin-${$app.stage}`,
-        originProtocolPolicy: "http-only",
-        // originProtocolPolicy: "https-only",
+        originProtocolPolicy: "https-only",
         originSslProtocols: {
             items: ["TLSv1.2"],
             quantity: 1,
@@ -77,118 +78,116 @@ const responseHeadersPolicy = new aws.cloudfront.ResponseHeadersPolicy(
 
 // const encodedPublicKey = new sst.Secret("ENCODED_PUBLIC_KEY");
 
-const encodedPublicKey = await aws.ssm.getParameter({
-    name: "/sst-test/encodedPublicKey",
-    withDecryption: true, // 暗号化されている場合は復号化
-}).then(param => param.value);
+// const encodedPublicKey = await aws.ssm.getParameter({
+//   name: `/${infraConfigResouces.idPrefix}/encodedPublicKey`,
+//   withDecryption: true, // 暗号化されている場合は復号化
+// }).then(param => param.value);
 
-// const publicKey = new aws.cloudfront.PublicKey(
-//   `${infraConfigResouces.idPrefix}-public-key-${$app.stage}`,
-//   {
-//     name: `${infraConfigResouces.idPrefix}-public-key-${$app.stage}`,
-//     comment: `${infraConfigResouces.idPrefix} public key for ${$app.stage}`,
-//     encodedKey: encodedPublicKey,
-//   }
-// );
+// const keyGroupId = await aws.ssm.getParameter({
+//   name: `/${infraConfigResouces.idPrefix}/cloudfront/${$app.stage}/keyGroup/id`,
+//   withDecryption: true,
+// }).then(param => param.value);
 
-// const keyGroup = new aws.cloudfront.KeyGroup(
-//   `${infraConfigResouces.idPrefix}-key-group-${$app.stage}`,
-//   {
-//     name: `${infraConfigResouces.idPrefix}-key-group-${$app.stage}`,
-//     comment: `${infraConfigResouces.idPrefix} key group for ${$app.stage}`,
-//     items: [publicKey.id],
-//   }
-// );
-
-const cdn = new sst.aws.StaticSite(
+// vpc origin用
+const cdn = new sst.aws.Cdn(
   `${infraConfigResouces.idPrefix}-${$app.stage}`,
   {
-    domain: infraConfigResouces.domainName,
-    invalidation: {
-      paths: "all",
-      wait: true,
+    // domain: infraConfigResouces.domainName,
+    domain: {
+      name: infraConfigResouces.domainName,
+      dns: sst.aws.dns({
+        zone: infraConfigResouces.hostedZone.zoneId
+      }),
+      cert: acmResouces.cloudfrontCertificate.arn
     },
+    comment: `${infraConfigResouces.idPrefix}-cloudfront-${$app.stage}`,
+    origins: [
+      {
+        originId: `${infraConfigResouces.idPrefix}-upload-s3-${$app.stage}`,
+        originAccessControlId: originAccessControlS3.id,
+        domainName: s3Resouces.uploadCdnBucket.bucketDomainName,
+      },
+      {
+        originId: albResources.alb.id,
+        domainName: albResources.alb.dnsName,
+        vpcOriginConfig: {
+          vpcOriginId: vpcOriginForAlb.id,
+          originKeepaliveTimeout: 10,
+          originReadTimeout: 10,
+        },
+        customHeaders: [{
+            name: "X-Custom-Header",
+            value: `${infraConfigResouces.idPrefix}-cloudfront`,
+        }],
+      }
+    ],
+    defaultCacheBehavior: {
+      allowedMethods: [
+          "DELETE",
+          "GET",
+          "HEAD",
+          "OPTIONS",
+          "PATCH",
+          "POST",
+          "PUT",
+      ],
+      cachedMethods: [
+          "GET",
+          "HEAD",
+      ],
+      targetOriginId: albResources.alb.id,
+      // AllViewerExceptHostHeader
+      originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
+      // UseOriginCacheControlHeaders
+      cachePolicyId: "83da9c7e-98b4-4e11-a168-04f0df8e2c65",
+      viewerProtocolPolicy: "https-only",
+      minTtl: 0,
+      defaultTtl: 3600,
+      maxTtl: 86400,
+      responseHeadersPolicyId: responseHeadersPolicy.id,
+      compress: true,
+    },
+    orderedCacheBehaviors: [
+      {
+        allowedMethods: ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
+        cachedMethods: ["GET", "HEAD"],
+        defaultTtl: 0,
+        maxTtl: 0,
+        minTtl: 0,
+        forwardedValues: {
+          cookies: {
+            forward: "none",
+          },
+          headers: ["X-Authorization"],
+          queryString: true,
+        },
+        responseHeadersPolicyId: responseHeadersPolicy.id,
+        pathPattern: "/upload/*",
+        targetOriginId: `${infraConfigResouces.idPrefix}-upload-s3-${$app.stage}`,
+        viewerProtocolPolicy: "redirect-to-https",
+        compress: true,
+        // trustedKeyGroups: [keyGroupId],
+      },
+    ],
     transform: {
-      cdn(args, opts, name) {
-        albResources.alb.dnsName.apply((name) => {
-          console.log(name);
-        })
-        args.origins = [
-          ...((args.origins as aws.types.input.cloudfront.DistributionOrigin[]) ?? []),
-          {
-            originId: `${infraConfigResouces.idPrefix}-upload-s3-${$app.stage}`,
-            originAccessControlId: originAccessControlS3.id,
-            domainName: s3Resouces.uploadCdnBucket.bucketDomainName,
+      distribution: {
+        webAclId: wafResources.waf.arn,
+        loggingConfig: {
+          bucket: s3Resouces.cloudfrontLogBucket.bucketDomainName,
+          prefix: `${infraConfigResouces.idPrefix}-${$app.stage}`,
+        },
+        enabled: true,
+        restrictions: {
+          geoRestriction: {
+            restrictionType: "none",
           },
-          {
-            originId: albResources.alb.id,
-            domainName: albResources.alb.dnsName,
-            vpcOriginConfig: {
-              vpcOriginId: vpcOriginForAlb.id,
-              originKeepaliveTimeout: 10,
-              originReadTimeout: 10,
-            },
-            customHeaders: [{
-                name: "X-Custom-Header",
-                value: `${infraConfigResouces.idPrefix}-cloudfront`,
-            }],
-          }
-        ];
-        args.defaultCacheBehavior = {
-          ...(args.defaultCacheBehavior as aws.types.input.cloudfront.DistributionDefaultCacheBehavior),
-          allowedMethods: [
-              "DELETE",
-              "GET",
-              "HEAD",
-              "OPTIONS",
-              "PATCH",
-              "POST",
-              "PUT",
-          ],
-          cachedMethods: [
-              "GET",
-              "HEAD",
-          ],
-          targetOriginId: albResources.alb.id,
-          // forwardedValues: {
-          //     queryString: false,
-          //     cookies: {
-          //         forward: "none",
-          //     },
-          // },
-          viewerProtocolPolicy: "allow-all",
-          minTtl: 0,
-          defaultTtl: 3600,
-          maxTtl: 86400,
-        };
-        args.orderedCacheBehaviors = [
-          ...((args.orderedCacheBehaviors as aws.types.input.cloudfront.DistributionOrderedCacheBehavior[]) ?? []),
-          {
-            allowedMethods: ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
-            cachedMethods: ["GET", "HEAD"],
-            defaultTtl: 0,
-            maxTtl: 0,
-            minTtl: 0,
-            forwardedValues: {
-              cookies: {
-                forward: "none",
-              },
-              headers: ["X-Authorization"],
-              queryString: true,
-            },
-            responseHeadersPolicyId: responseHeadersPolicy.id,
-            pathPattern: "/upload/*",
-            targetOriginId: `${infraConfigResouces.idPrefix}-upload-s3-${$app.stage}`,
-            viewerProtocolPolicy: "redirect-to-https",
-            // trustedKeyGroups: [keyGroup.id],
-          },
-        ];
+        },
       },
     }
-  },
+  }
 );
 
-// upload bucketにオリジンアクセスの許可をする
+// 画像アップロードバケット用のバケットポリシー。cloudfront経由でのみGet、Putができるようにする
 new aws.s3.BucketPolicy(
   `${infraConfigResouces.idPrefix}-store-bucket-policy-${$app.stage}`,
   {
@@ -219,7 +218,7 @@ new aws.s3.BucketPolicy(
           },
           Condition: {
             StringEquals: {
-              "AWS:SourceArn": cdn.nodes.cdn?.nodes.distribution.arn,
+              "AWS:SourceArn": cdn.nodes.distribution.arn,
             },
           },
         },
@@ -232,7 +231,7 @@ new aws.s3.BucketPolicy(
           },
           Condition: {
             StringEquals: {
-              "AWS:SourceArn": cdn.nodes.cdn?.nodes.distribution.arn,
+              "AWS:SourceArn": cdn.nodes.distribution.arn,
             },
           },
         },
@@ -243,16 +242,3 @@ new aws.s3.BucketPolicy(
     dependsOn: [cdn],
   },
 );
-
-// ssm登録
-// new aws.ssm.Parameter(
-//   `${infraConfigResouces.idPrefix}-publicKey-${$app.stage}`,
-//   {
-//     name: `/${infraConfigResouces.idPrefix}/publicKey/${$app.stage}`,
-//     type: "String",
-//     value: publicKey.id,
-//   }
-// );
-
-
-
