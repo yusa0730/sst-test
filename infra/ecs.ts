@@ -92,10 +92,6 @@ export const fargateResources = {
 };
 
 // ============以下はSSTで成功したコード============
-// RDS 取得
-// const rdsClusterId = await aws.ssm.getParameter({
-//   name: `/satto/shortcuts/bff/rds/clusterId/${$app.stage}`,
-// });
 // const rds = sst.aws.Postgres.v1.get(
 //   `${idPrefix}-rds-${$app.stage}`,
 //   rdsClusterId.value,

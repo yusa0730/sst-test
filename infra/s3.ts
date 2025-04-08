@@ -103,7 +103,7 @@ const cloudfrontLogBucket = new aws.s3.BucketV2(
 
 // オブジェクトの所有権の設定
 new aws.s3.BucketOwnershipControls(
-  `${infraConfigResouces.idPrefix}-log-bucket-ownership-controls-${$app.stage}`,
+  `${infraConfigResoucesidPrefix}-log-bucket-ownership-controls-${$app.stage}`,
   {
     bucket: cloudfrontLogBucket.id,
     rule: {

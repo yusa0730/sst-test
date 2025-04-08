@@ -7,7 +7,7 @@ const wafCustomRule = new aws.wafv2.RuleGroup(
   `${infraConfigResouces.idPrefix}-waf-custom-rule-${$app.stage}`,
   {
     name: `${infraConfigResouces.idPrefix}-waf-custom-rule-${$app.stage}`,
-    description: "Waf custom rule for satto admin marketing cdn",
+    description: "Waf custom rule for cdn",
     capacity: 1,
     scope: "CLOUDFRONT",
     visibilityConfig: {
@@ -57,7 +57,7 @@ const waf = new aws.wafv2.WebAcl(
   `${infraConfigResouces.idPrefix}-waf-${$app.stage}`,
   {
     name: `${infraConfigResouces.idPrefix}-waf-${$app.stage}`,
-    description: "Waf for satto memo desktop lts cdn",
+    description: "Waf for desktop lts cdn",
     defaultAction: {
       allow: {},
     },
