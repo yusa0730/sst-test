@@ -4,6 +4,8 @@ import { Hono } from 'hono'
 const app = new Hono()
 
 app.get('/', (c) => {
+  const { PRIVATE_KEY } = c.env;
+  console.log("%s", PRIVATE_KEY);
   return c.text('Hello Hono! hono Docker test executing こんにちは。よろしくお願いします。頭がいたいのは治った')
 })
 
